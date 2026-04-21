@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="FastPOS - Modern Point of Sale System for retail operations">
+    <title>FastPOS — Point of Sale</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%236366f1'/><text x='50%' y='55%' text-anchor='middle' dominant-baseline='central' fill='white' font-family='Arial' font-weight='bold' font-size='18'>P</text></svg>">
+</head>
+<body>
+
+    <!-- ═══════════ LOGIN SCREEN ═══════════ -->
+    <div id="login-screen" class="login-wrapper">
+        <div class="login-card">
+            <div class="logo">
+                <h1>FastPOS</h1>
+                <p>Point of Sale System</p>
+            </div>
+            <form id="login-form" onsubmit="return false;">
+                <div class="form-group">
+                    <label for="login-username">Username</label>
+                    <input type="text" id="login-username" placeholder="Enter username" autocomplete="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter password" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block btn-lg" id="login-btn">
+                    Sign In
+                </button>
+                <p class="text-center mt-2 text-muted" style="font-size:0.8rem;">Default: admin / admin123</p>
+            </form>
+        </div>
+    </div>
+
+    <!-- ═══════════ APP SHELL ═══════════ -->
+    <div id="app-shell" class="app-layout hidden">
+
+        <!-- ── Sidebar ──────────────────────────────────── -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <h1>FastPOS</h1>
+                <span>Point of Sale v1.0</span>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section-label">Main</div>
+                <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+                    Dashboard
+                </div>
+                <div class="nav-item" data-page="pos" onclick="navigateTo('pos')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    POS Terminal
+                </div>
+
+                <div class="nav-section-label">Management</div>
+                <div class="nav-item" data-page="products" onclick="navigateTo('products')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+                    Products
+                </div>
+                <div class="nav-item" data-page="transactions" onclick="navigateTo('transactions')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                    Transactions
+                </div>
+
+                <div class="nav-section-label" id="admin-section-label">Admin</div>
+                <div class="nav-item" data-page="reports" id="nav-reports" onclick="navigateTo('reports')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+                    Reports
+                </div>
+                <div class="nav-item" data-page="users" id="nav-users" onclick="navigateTo('users')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                    Users
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="user-avatar">A</div>
+                    <div class="user-details">
+                        <div class="name" id="user-display-name">Admin</div>
+                        <div class="role" id="user-display-role">admin</div>
+                    </div>
+                </div>
+                <button class="btn btn-ghost btn-block btn-sm mt-1" onclick="logout()" id="logout-btn">Sign Out</button>
+            </div>
+        </aside>
+
+        <!-- ── Main Content Area ─────────────────────────── -->
+        <main class="main-content">
+
+            <!-- Dashboard Page -->
+            <div id="page-dashboard" class="page">
+                <div class="page-header">
+                    <div>
+                        <h2>Dashboard</h2>
+                        <p>Business overview at a glance</p>
+                    </div>
+                </div>
+                <div class="stats-grid" id="dashboard-stats"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+                    <div class="card">
+                        <div class="card-header"><h3>Today's Sales</h3></div>
+                        <div id="daily-stats-content">
+                            <p class="text-muted">Loading...</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3>Inventory Health</h3></div>
+                        <div id="inventory-health-content">
+                            <p class="text-muted">Loading...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- POS Terminal Page -->
+            <div id="page-pos" class="page hidden">
+                <div class="page-header">
+                    <div>
+                        <h2>POS Terminal</h2>
+                        <p>Add items and process sales</p>
+                    </div>
+                </div>
+                <div class="pos-layout">
+                    <div>
+                        <div class="search-bar">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                            <input type="text" id="pos-search" placeholder="Search products..." oninput="filterPosProducts()">
+                        </div>
+                        <div class="controls-bar">
+                            <select id="pos-category" onchange="filterPosProducts()">
+                                <option value="">All Categories</option>
+                                <option value="food">Food</option>
+                                <option value="beverage">Beverage</option>
+                                <option value="electronics">Electronics</option>
+                                <option value="clothing">Clothing</option>
+                                <option value="grocery">Grocery</option>
+                                <option value="health">Health</option>
+                                <option value="stationery">Stationery</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="product-grid" id="pos-product-grid"></div>
+                    </div>
+                    <div class="cart-panel">
+                        <div class="cart-header">
+                            <h3>Current Order</h3>
+                            <span class="cart-count" id="cart-count">0</span>
+                        </div>
+                        <div class="cart-items" id="cart-items">
+                            <div class="cart-empty">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                                <span>Cart is empty</span>
+                                <span style="font-size:0.78rem">Click products to add</span>
+                            </div>
+                        </div>
+                        <div class="cart-summary" id="cart-summary" style="display:none;">
+                            <div class="cart-summary-row">
+                                <span>Subtotal</span>
+                                <span id="cart-subtotal">$0.00</span>
+                            </div>
+                            <div class="cart-summary-row">
+                                <span>Discount
+                                    <select id="cart-discount" onchange="updateCartTotals()" style="padding:0.15rem 0.4rem;background:var(--bg-input);border:1px solid var(--border-subtle);border-radius:4px;color:var(--text-primary);font-size:0.8rem;margin-left:0.3rem;">
+                                        <option value="0">0%</option>
+                                        <option value="5">5%</option>
+                                        <option value="10">10%</option>
+                                        <option value="15">15%</option>
+                                        <option value="20">20%</option>
+                                    </select>
+                                </span>
+                                <span id="cart-discount-amount">-$0.00</span>
+                            </div>
+                            <div class="cart-summary-row">
+                                <span>Tax (<span id="tax-rate-display">10</span>%)</span>
+                                <span id="cart-tax">$0.00</span>
+                            </div>
+                            <div class="cart-summary-row total">
+                                <span>Total</span>
+                                <span id="cart-total">$0.00</span>
+                            </div>
+                            <div class="cart-actions">
+                                <button class="btn btn-ghost btn-sm" onclick="clearCart()" style="flex:1">Clear</button>
+                                <select id="payment-method" style="padding:0.45rem 0.6rem;background:var(--bg-input);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);color:var(--text-primary);font-size:0.8rem;">
+                                    <option value="cash">Cash</option>
+                                    <option value="card">Card</option>
+                                    <option value="digital_wallet">Digital</option>
+                                </select>
+                                <button class="btn btn-success btn-sm" onclick="processCheckout()" id="checkout-btn" style="flex:2">
+                                    Checkout
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Products Page -->
+            <div id="page-products" class="page hidden">
+                <div class="page-header">
+                    <div>
+                        <h2>Products</h2>
+                        <p>Manage your inventory</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openProductModal()" id="add-product-btn">+ Add Product</button>
+                </div>
+                <div class="controls-bar">
+                    <div class="search-bar" style="margin-bottom:0;flex:1;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        <input type="text" id="product-search" placeholder="Search products..." oninput="loadProducts()">
+                    </div>
+                    <select id="product-category-filter" onchange="loadProducts()">
+                        <option value="">All Categories</option>
+                        <option value="food">Food</option>
+                        <option value="beverage">Beverage</option>
+                        <option value="electronics">Electronics</option>
+                        <option value="clothing">Clothing</option>
+                        <option value="grocery">Grocery</option>
+                        <option value="health">Health</option>
+                        <option value="stationery">Stationery</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>SKU</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-table-body">
+                                <tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="products-pagination"></div>
+                </div>
+            </div>
+
+            <!-- Transactions Page -->
+            <div id="page-transactions" class="page hidden">
+                <div class="page-header">
+                    <div>
+                        <h2>Transactions</h2>
+                        <p>Sales history and records</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Transaction ID</th>
+                                    <th>Date</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Payment</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="transactions-table-body">
+                                <tr><td colspan="7" class="text-center text-muted" style="padding:2rem;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="transactions-pagination"></div>
+                </div>
+            </div>
+
+            <!-- Reports Page -->
+            <div id="page-reports" class="page hidden">
+                <div class="page-header">
+                    <div>
+                        <h2>Reports</h2>
+                        <p>Sales analytics and insights</p>
+                    </div>
+                </div>
+                <div class="controls-bar">
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label style="margin-bottom:0.25rem;">Start Date</label>
+                        <input type="date" id="report-start-date" style="padding:0.5rem 0.75rem;background:var(--bg-input);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;">
+                    </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label style="margin-bottom:0.25rem;">End Date</label>
+                        <input type="date" id="report-end-date" style="padding:0.5rem 0.75rem;background:var(--bg-input);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;">
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="loadSalesReport()" style="align-self:flex-end;">Generate Report</button>
+                </div>
+                <div class="stats-grid" id="report-stats"></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+                    <div class="card">
+                        <div class="card-header"><h3>Top Selling Products</h3></div>
+                        <div id="top-products-content">
+                            <p class="text-muted">Select date range and generate report</p>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header"><h3>Daily Breakdown</h3></div>
+                        <div id="daily-breakdown-content">
+                            <p class="text-muted">Select date range and generate report</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Users Page -->
+            <div id="page-users" class="page hidden">
+                <div class="page-header">
+                    <div>
+                        <h2>User Management</h2>
+                        <p>Manage system users and roles</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openUserModal()" id="add-user-btn">+ Add User</button>
+                </div>
+                <div class="card">
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                    <th>Status</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <tr><td colspan="6" class="text-center text-muted" style="padding:2rem;">Loading...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="pagination" id="users-pagination"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ═══════════ MODALS ═══════════ -->
+
+    <!-- Add/Edit Product Modal -->
+    <div class="modal-overlay" id="product-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="product-modal-title">Add Product</h3>
+                <button class="modal-close" onclick="closeModal('product-modal')">&times;</button>
+            </div>
+            <form id="product-form" onsubmit="return false;">
+                <input type="hidden" id="product-edit-id">
+                <div class="form-inline">
+                    <div class="form-group">
+                        <label>Product Name</label>
+                        <input type="text" id="product-name" required placeholder="e.g. Espresso Coffee">
+                    </div>
+                    <div class="form-group">
+                        <label>SKU</label>
+                        <input type="text" id="product-sku" required placeholder="e.g. BEV-ESP-001">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea id="product-description" rows="2" placeholder="Brief description..."></textarea>
+                </div>
+                <div class="form-inline">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="product-category-input">
+                            <option value="food">Food</option>
+                            <option value="beverage">Beverage</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="clothing">Clothing</option>
+                            <option value="grocery">Grocery</option>
+                            <option value="health">Health</option>
+                            <option value="stationery">Stationery</option>
+                            <option value="other" selected>Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Sell Price ($)</label>
+                        <input type="number" step="0.01" min="0.01" id="product-price" required placeholder="0.00">
+                    </div>
+                </div>
+                <div class="form-inline">
+                    <div class="form-group">
+                        <label>Cost Price ($)</label>
+                        <input type="number" step="0.01" min="0" id="product-cost" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Stock Quantity</label>
+                        <input type="number" min="0" id="product-stock" placeholder="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Low Stock Threshold</label>
+                    <input type="number" min="0" id="product-threshold" value="10" placeholder="10">
+                </div>
+                <div class="flex flex-end gap-1 mt-2">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('product-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="product-save-btn">Save Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add User Modal -->
+    <div class="modal-overlay" id="user-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Add User</h3>
+                <button class="modal-close" onclick="closeModal('user-modal')">&times;</button>
+            </div>
+            <form id="user-form" onsubmit="return false;">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="user-username" required placeholder="john_doe">
+                </div>
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="user-fullname" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="user-email" required placeholder="john@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="user-password" required placeholder="Min 6 characters" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>Role</label>
+                    <select id="user-role">
+                        <option value="cashier">Cashier</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                </div>
+                <div class="flex flex-end gap-1 mt-2">
+                    <button type="button" class="btn btn-ghost" onclick="closeModal('user-modal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create User</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Receipt Modal -->
+    <div class="modal-overlay" id="receipt-modal">
+        <div class="modal">
+            <div class="receipt" id="receipt-content"></div>
+            <div class="flex flex-end mt-2">
+                <button class="btn btn-primary" onclick="closeModal('receipt-modal')">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transaction Detail Modal -->
+    <div class="modal-overlay" id="transaction-detail-modal">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>Transaction Details</h3>
+                <button class="modal-close" onclick="closeModal('transaction-detail-modal')">&times;</button>
+            </div>
+            <div id="transaction-detail-content"></div>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>
