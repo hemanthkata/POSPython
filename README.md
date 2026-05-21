@@ -9,7 +9,7 @@
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?logo=githubactions&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-**A full-stack, cloud-ready Point of Sale system built with FastAPI and a modern JavaScript cashier interface.**
+**A full-stack, cloud-ready Point of Sale system built with FastAPI and a modern React + Vite cashier interface.**
 
 [Features](#-features) · [Architecture](#-architecture) · [Quick Start](#-quick-start) · [API Docs](#-api-documentation) · [Deployment](#-deployment)
 
@@ -53,7 +53,7 @@
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    Client (Browser)                          │
-│            JavaScript SPA + CSS Glassmorphism UI             │
+│            React + Vite SPA + CSS Glassmorphism              │
 └────────────────────────┬────────────────────────────────────┘
                          │ REST API (JSON)
 ┌────────────────────────▼────────────────────────────────────┐
@@ -110,10 +110,10 @@ POSPython/
 │   ├── database.py               # Async engine & session factory
 │   ├── main.py                   # App factory + lifespan + CORS
 │   └── worker.py                 # Celery application instance
-├── frontend/                     # Browser-based Cashier Interface
-│   ├── index.html                # SPA shell (all pages + modals)
-│   ├── styles.css                # Dark-mode glassmorphism design system
-│   └── app.js                    # Client-side logic (~970 lines)
+├── frontend/                     # Browser-based React Cashier Interface
+│   ├── src/                      # React components, pages, context, and utils
+│   ├── index.html                # React entry HTML
+│   └── package.json              # Node dependencies (Vite, React, Lucide)
 ├── tests/                        # Pytest async test suite
 │   ├── conftest.py               # Test fixtures & DB setup
 │   ├── test_auth.py              # Authentication tests
@@ -265,8 +265,8 @@ The `.github/workflows/ci-cd.yml` pipeline:
 | **Payments** | Stripe Checkout + Webhooks |
 | **Task Queue** | Celery + Redis |
 | **PDF** | ReportLab |
-| **Frontend** | Vanilla JS SPA, CSS3 (glassmorphism, dark mode) |
-| **Containerization** | Docker, Docker Compose |
+| **Frontend** | React 18, Vite, React Router, CSS3 (glassmorphism) |
+| **Containerization** | Docker (Multi-stage build), Docker Compose |
 | **CI/CD** | GitHub Actions |
 | **Cloud** | AWS (EC2, RDS, S3) |
 
