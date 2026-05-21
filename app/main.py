@@ -15,7 +15,7 @@ from app.config import get_settings
 from app.database import init_db, async_session_factory
 from app.models.user import User, UserRole
 from app.utils.security import hash_password
-from app.routes import auth, users, products, transactions, reports
+from app.routes import auth, users, products, transactions, reports, payments
 
 from sqlalchemy import select
 
@@ -113,6 +113,7 @@ app.include_router(users.router, prefix=API_PREFIX)
 app.include_router(products.router, prefix=API_PREFIX)
 app.include_router(transactions.router, prefix=API_PREFIX)
 app.include_router(reports.router, prefix=API_PREFIX)
+app.include_router(payments.router, prefix=API_PREFIX)
 
 
 # ── Serve Frontend ────────────────────────────────────────────────────────────

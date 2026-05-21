@@ -1,0 +1,98 @@
+# ══════════════════════════════════════════════════════════════════════════════
+# FastPOS — Docker Compose (Full Stack)
+# Services: FastAPI app, PostgreSQL, Redis, Celery Worker
+# ══════════════════════════════════════════════════════════════════════════════
+
+version: "3.9"
+
+services:
+  # ── FastAPI Application ──────────────────────────────────────────────────
+  web:
+    build: .
+    container_name: fastpos-web
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://fastpos:fastpos_secret@db:5432/fastpos_db
+      - SECRET_KEY=${SECRET_KEY:-a7f3b9c2e1d4f8a6b5c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2}
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+      - DEBUG=false
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - fastpos-net
+
+  # ── PostgreSQL Database ──────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: fastpos-db
+    environment:
+      POSTGRES_USER: fastpos
+      POSTGRES_PASSWORD: fastpos_secret
+      POSTGRES_DB: fastpos_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fastpos -d fastpos_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - fastpos-net
+
+  # ── Redis (Celery Broker) ────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: fastpos-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - fastpos-net
+
+  # ── Celery Worker ────────────────────────────────────────────────────────
+  celery_worker:
+    build: .
+    container_name: fastpos-celery
+    command: celery -A app.worker worker --loglevel=info --concurrency=2
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://fastpos:fastpos_secret@db:5432/fastpos_db
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - SMTP_HOST=${SMTP_HOST:-smtp.gmail.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_USERNAME=${SMTP_USERNAME:-}
+      - SMTP_PASSWORD=${SMTP_PASSWORD:-}
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - fastpos-net
+
+volumes:
+  postgres_data:
+
+networks:
+  fastpos-net:
+    driver: bridge

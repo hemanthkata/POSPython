@@ -11,6 +11,7 @@ let refreshToken = localStorage.getItem('fastpos_refresh') || null;
 let currentUser = null;
 let cart = [];
 let allPosProducts = [];
+let currentViewingTransactionId = null;
 
 // ── Category Icons ─────────────────────────────────────────────────────────
 const categoryIcons = {
@@ -665,6 +666,8 @@ async function viewTransaction(txId) {
                 <div style="display:flex;justify-content:space-between;font-size:1.1rem;font-weight:700;padding-top:0.5rem;border-top:1px solid var(--border-subtle);"><span>Total</span><span style="color:var(--accent-400);">$${t.total_amount.toFixed(2)}</span></div>
             </div>
         `;
+        currentViewingTransactionId = t.transaction_id;
+        document.getElementById('download-invoice-btn').style.display = '';
         openModal('transaction-detail-modal');
     } catch (e) {
         toast('Failed to load transaction', 'error');
@@ -780,6 +783,49 @@ async function loadSalesReport() {
                 </div>
             `;
         }
+    } catch (e) {
+        toast(e.message, 'error');
+    }
+}
+
+async function exportReport(format) {
+    const startDate = document.getElementById('report-start-date').value;
+    const endDate = document.getElementById('report-end-date').value;
+    if (!startDate || !endDate) { toast('Select date range first', 'warning'); return; }
+
+    try {
+        const res = await api(`/reports/export/${format}?start_date=${startDate}&end_date=${endDate}`);
+        if (!res.ok) throw new Error('Export failed');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `fastpos_sales_${startDate}_${endDate}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        toast(`Report exported as ${format.toUpperCase()}`, 'success');
+    } catch (e) {
+        toast(e.message, 'error');
+    }
+}
+
+async function downloadInvoice() {
+    if (!currentViewingTransactionId) return;
+    try {
+        const res = await api(`/transactions/${currentViewingTransactionId}/invoice`);
+        if (!res.ok) throw new Error('Invoice generation failed');
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `invoice_${currentViewingTransactionId.substring(0, 8)}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        toast('Invoice downloaded', 'success');
     } catch (e) {
         toast(e.message, 'error');
     }

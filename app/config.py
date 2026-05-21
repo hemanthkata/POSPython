@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     # Application
     APP_NAME: str = "FastPOS"
-    APP_VERSION: str = "1.0.0"
+    APP_VERSION: str = "2.0.0"
     APP_HOST: str = "0.0.0.0"
     APP_PORT: int = 8080
     DEBUG: bool = True
@@ -30,6 +30,26 @@ class Settings(BaseSettings):
 
     # Tax
     TAX_RATE: float = 10.0
+
+    # Stripe Payment Gateway
+    STRIPE_SECRET_KEY: str = ""
+    STRIPE_PUBLISHABLE_KEY: str = ""
+    STRIPE_WEBHOOK_SECRET: str = ""
+    STRIPE_SUCCESS_URL: str = "http://localhost:8080/?payment=success"
+    STRIPE_CANCEL_URL: str = "http://localhost:8080/?payment=cancel"
+
+    # Celery / Redis
+    CELERY_BROKER_URL: str = "redis://localhost:6379/0"
+    CELERY_RESULT_BACKEND: str = "redis://localhost:6379/0"
+
+    # Email (SMTP)
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USERNAME: str = ""
+    SMTP_PASSWORD: str = ""
+    SMTP_FROM_EMAIL: str = "noreply@fastpos.local"
+    SMTP_FROM_NAME: str = "FastPOS"
+    SMTP_USE_TLS: bool = True
 
     model_config = {
         "env_file": ".env",

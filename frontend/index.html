@@ -296,6 +296,8 @@
                         <input type="date" id="report-end-date" style="padding:0.5rem 0.75rem;background:var(--bg-input);border:1px solid var(--border-subtle);border-radius:var(--radius-sm);color:var(--text-primary);font-family:inherit;">
                     </div>
                     <button class="btn btn-primary btn-sm" onclick="loadSalesReport()" style="align-self:flex-end;">Generate Report</button>
+                    <button class="btn btn-ghost btn-sm" onclick="exportReport('csv')" style="align-self:flex-end;" title="Export as CSV">📥 CSV</button>
+                    <button class="btn btn-ghost btn-sm" onclick="exportReport('json')" style="align-self:flex-end;" title="Export as JSON">📥 JSON</button>
                 </div>
                 <div class="stats-grid" id="report-stats"></div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
@@ -471,6 +473,10 @@
                 <button class="modal-close" onclick="closeModal('transaction-detail-modal')">&times;</button>
             </div>
             <div id="transaction-detail-content"></div>
+            <div class="flex flex-end gap-1 mt-2">
+                <button class="btn btn-ghost btn-sm" id="download-invoice-btn" onclick="downloadInvoice()" style="display:none;">📄 Download Invoice</button>
+                <button class="btn btn-primary btn-sm" onclick="closeModal('transaction-detail-modal')">Close</button>
+            </div>
         </div>
     </div>
 

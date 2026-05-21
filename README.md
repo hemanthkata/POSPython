@@ -1,114 +1,277 @@
-# FastPOS — Developer Documentation
+# ⚡ FastPOS — Cloud-Based Point of Sale System
 
-Welcome to the FastPOS codebase! This document provides a clear, step-by-step breakdown of how the entire system works. It explains what every folder contains, what every file does, and how data travels from the screen all the way to the database.
+<div align="center">
+
+![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)
+![Stripe](https://img.shields.io/badge/Stripe-Integrated-6772E5?logo=stripe&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?logo=docker&logoColor=white)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?logo=githubactions&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
+
+**A full-stack, cloud-ready Point of Sale system built with FastAPI and a modern JavaScript cashier interface.**
+
+[Features](#-features) · [Architecture](#-architecture) · [Quick Start](#-quick-start) · [API Docs](#-api-documentation) · [Deployment](#-deployment)
+
+</div>
 
 ---
 
-## 1. High-Level Architecture
+## 🎯 Features
 
-FastPOS is a **Full-Stack Application** divided into two main layers:
+### Core POS Operations
+- 🛒 **Real-time Shopping Cart** — Add, remove, adjust quantities with live tax & discount calculation
+- 📦 **Product Catalog CRUD** — Full inventory management with SKU tracking, categories, and stock alerts
+- 💳 **Order Processing Workflow** — Complete checkout flow with stock validation and atomic transactions
+- 🔄 **Transaction Refunds** — Admin-controlled refund system with automatic stock restoration
 
-1.  **Backend (FastAPI)**: Written in Python. It handles database connections, business logic, security (roles & passwords), and serves the data through API endpoints.
-2.  **Frontend (Vanilla JavaScript)**: Written in HTML, CSS, and JS. It runs in the user's browser, handles the visual interface (buttons, tables, carts), and asks the backend for data.
+### Payments & Invoicing
+- 💰 **Stripe Payment Gateway** — Secure checkout sessions with webhook handlers for payment confirmation
+- 📄 **PDF Invoice Generation** — Professional, branded invoices using ReportLab, downloadable per transaction
+- 📧 **Async Email Delivery** — Order confirmation emails via Celery task queues with SMTP integration
 
-Because they are cleanly separated, they communicate entirely over **JSON API calls**. (e.g., The frontend says "Give me the products", and the backend replies with a JSON list of products).
+### Analytics & Reporting
+- 📊 **Sales Analytics Dashboard** — Date-range filtering with revenue, transaction counts, and item metrics
+- 🏆 **Product Performance Reports** — Top-selling products ranked by quantity and revenue
+- 📅 **Daily Breakdown** — Granular day-by-day sales analysis
+- 📥 **Dynamic Data Exports** — CSV and JSON export endpoints for sales and product data
+
+### Security & Auth
+- 🔐 **JWT Authentication** — Access + refresh token flow with automatic silent renewal
+- 👥 **Role-Based Access Control** — Admin and Cashier roles with granular endpoint permissions
+- 🔒 **Bcrypt Password Hashing** — Industry-standard password security
+
+### DevOps & Infrastructure
+- 🐳 **Docker Containerized** — Multi-stage Dockerfile with Docker Compose (FastAPI + PostgreSQL + Redis + Celery)
+- 🚀 **CI/CD Pipeline** — GitHub Actions workflow: lint → test → build → deploy to AWS EC2
+- 🧪 **Pytest Test Suite** — Async test coverage for auth, products, transactions, and reports
 
 ---
 
-## 2. Directory Structure
+## 🏗 Architecture
 
-Here is a bird's-eye view of your project:
-
-```text
-d:\New project\
-├── app/                  <-- Everything related to the Python Server
-│   ├── models/           <-- Database schemas (SQLAlchemy tables)
-│   ├── routes/           <-- API endpoint definitions (The URLs)
-│   ├── schemas/          <-- Data validation rules (Pydantic formats)
-│   ├── services/         <-- The core business logic and math
-│   ├── utils/            <-- Helper tools (Security, JWT, Passwords)
-│   ├── config.py         <-- Environment variables mapping
-│   ├── database.py       <-- Database connection logic
-│   └── main.py           <-- The engine that starts the server
-├── frontend/             <-- Everything the User Sees
-│   ├── index.html        <-- The UI structure and Modals
-│   ├── styles.css        <-- The Dark-mode glassmorphism design
-│   └── app.js            <-- The magic that makes buttons click and data load
-├── pos_database.db       <-- Your actual SQLite Database
-├── run.py                <-- The script you run to start everything
-└── requirements.txt      <-- The Python packages to install
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    Client (Browser)                          │
+│            JavaScript SPA + CSS Glassmorphism UI             │
+└────────────────────────┬────────────────────────────────────┘
+                         │ REST API (JSON)
+┌────────────────────────▼────────────────────────────────────┐
+│                   FastAPI Application                        │
+│  ┌──────────┐  ┌──────────┐  ┌────────────┐  ┌──────────┐  │
+│  │  Auth    │  │ Products │  │Transactions│  │ Reports  │  │
+│  │ Routes   │  │  Routes  │  │  Routes    │  │  Routes  │  │
+│  └────┬─────┘  └────┬─────┘  └─────┬──────┘  └────┬─────┘  │
+│       │             │              │               │        │
+│  ┌────▼─────────────▼──────────────▼───────────────▼─────┐  │
+│  │              Service Layer (Business Logic)            │  │
+│  └───────────────────────┬───────────────────────────────┘  │
+│                          │                                   │
+│  ┌───────────────────────▼───────────────────────────────┐  │
+│  │           SQLAlchemy Async ORM + Pydantic Schemas      │  │
+│  └───────────────────────┬───────────────────────────────┘  │
+└──────────────────────────┼──────────────────────────────────┘
+                           │
+         ┌─────────────────┼─────────────────┐
+         │                 │                 │
+    ┌────▼─────┐    ┌──────▼──────┐   ┌──────▼──────┐
+    │ PostgreSQL│    │    Redis    │   │   Stripe    │
+    │  (RDS)    │    │  (Celery)  │   │  (Payments) │
+    └──────────┘    └────────────┘   └─────────────┘
 ```
 
 ---
 
-## 3. The Backend (`app/`) Breakdown
+## 📂 Project Structure
 
-### A. The Database Layer (`models/` & `database.py`)
-This is where the structure of your permanent data lives.
-*   **`database.py`**: Uses `sqlalchemy` and `aiosqlite` to connect to `pos_database.db` asynchronously (meaning it doesn't freeze the app while saving data).
-*   **`models/user.py`**: Defines the `users` table. Saves username, hashed password, and role (`admin` or `cashier`).
-*   **`models/product.py`**: Defines the `products` table. Tracks SKU, price, costs, categories, and **stock quantity**.
-*   **`models/transaction.py`**: Defines two tables: `transactions` (the checkout receipt level) and `transaction_items` (the individual items bought inside that receipt).
-
-### B. The Validation Layer (`schemas/`)
-Before data is saved to the database, or before it is sent to the frontend, it passes through **Pydantic Schemas**. These ensure bad data is blocked immediately.
-*   **`schemas/user.py`**: Ensures passwords are >= 6 chars, and emails look like emails.
-*   **`schemas/product.py`**: Ensures prices are greater than $0, and SKU strings aren't empty.
-*   **`schemas/transaction.py`**: Structures exactly how a checkout payload must look (a list of product IDs and quantities).
-
-### C. The API Definition Layer (`routes/`)
-These are the internet URLs that your frontend connects to. If a user hits `POST /users/`, it arrives here.
-*   **`routes/auth.py`**: Handles `/login`. Validates passwords and generates a secure JWT token that the frontend must use for all future requests.
-*   **`routes/products.py`**: Contains `GET`, `POST`, `PUT`, `DELETE` endpoints for inventory. Protected by `Depends(get_current_admin)`.
-*   **`routes/transactions.py`**: Contains the critical `POST /checkout` endpoint.
-*   **`routes/users.py`**: Handles user management and profile data.
-*   **`routes/reports.py`**: Gathers math-heavy analytics for the dashboard.
-
-### D. The Brains (`services/`)
-Routes *do not* talk to the database directly. They pass the request to **Services**. Services execute business logic securely.
-*   **`services/transaction_service.py`**: The most complex logic. When you trigger a `checkout`, this file loops through the cart. It checks stock, calculates taxes, applies discounts, safely deducts stock, and creates the transaction. It uses **database commits**, meaning if one step crashes, the entire checkout reverses automatically so you don't lose stock tracking!
-*   **`services/report_service.py`**: Groups data by dates. Calculates the daily revenue, most sold items, and current inventory monetary value.
-
-### E. Security (`utils/`)
-*   **`utils/security.py`**: Hashes passwords using `bcrypt`. A hacker looking at your database will only see gibberish strings, never real passwords. Also handles creating JWT (JSON Web Tokens) for sessions.
-*   **`utils/dependencies.py`**: This acts as a bouncer. Before allowing access to a route, it intercepts the JWT token in the web headers, verifies it hasn't expired, and proves who the user is. (It also prevents a `cashier` from viewing the `/reports` route!).
-
----
-
-## 4. The Frontend (`frontend/`) Breakdown
-
-### A. The Skeleton (`index.html`)
-FastPOS is a **Single Page Application (SPA)**. There is only one HTML file. 
-*   Instead of loading a new web page every time you click a tab, the HTML stores every section (Dashboard, POS, Products) inside `<div class="page hidden">` tags.
-*   It also stores all modals (Alerts, Add User overlay) at the bottom.
-
-### B. The Paint (`styles.css`)
-*   Contains a defined **Design System** utilizing CSS custom properties (variables) at the top for colors (ex: `var(--accent-400)`). 
-*   Implements **Glassmorphism** heavily on the login card (`backdrop-filter`) and smooth grid layouts for the POS items.
-*   The `.hidden { display: none !important; }` rule is what powers the logic to instantly hide screens the user shouldn't see.
-
-### C. The Muscles (`app.js`)
-At ~900 lines of code, this is what makes your dashboard alive. Let's break down its internal sections:
-1.  **State Management**: `let authToken`, `let cart`, `let currentUser` store temporary browser session data.
-2.  **`apiJSON()` & `tryRefreshToken()`**: A custom helper. Every time JS talks to FastAPI, it sends the `authToken` header securely. If the token expired after 30 minutes, it automatically calls the backend secretly to get a new token without logging you out!
-3.  **`navigateTo(page)`**: The core router. It finds all `div.page` tags, adds `.hidden` to them all, and then removes `.hidden` ONLY from the active one.
-4.  **`addToCart()` & `renderCart()`**: Stores product IDs in memory. Recalculates subtotal * tax - discount dynamically to update the screen before hitting the database.
-5.  **`toast(message, type)`**: Creates small notification bubbles in the bottom corner gracefully.
+```text
+POSPython/
+├── app/                          # FastAPI Backend
+│   ├── models/                   # SQLAlchemy ORM models
+│   │   ├── user.py               # User model with RBAC
+│   │   ├── product.py            # Product & Category models
+│   │   └── transaction.py        # Transaction & line items
+│   ├── routes/                   # API endpoint definitions
+│   │   ├── auth.py               # Login, register, token refresh
+│   │   ├── users.py              # User management (Admin)
+│   │   ├── products.py           # Product CRUD + stock adjustments
+│   │   ├── transactions.py       # Checkout, history, refunds, invoices
+│   │   ├── reports.py            # Analytics + CSV/JSON exports
+│   │   └── payments.py           # Stripe checkout sessions & webhooks
+│   ├── schemas/                  # Pydantic validation schemas
+│   ├── services/                 # Business logic layer
+│   ├── tasks/                    # Celery async tasks
+│   │   └── email_tasks.py        # Order confirmation emails
+│   ├── utils/                    # Helpers & utilities
+│   │   ├── security.py           # JWT + bcrypt
+│   │   ├── dependencies.py       # Auth injection (get_current_user)
+│   │   └── pdf_generator.py      # ReportLab PDF invoice generator
+│   ├── config.py                 # Pydantic Settings (env vars)
+│   ├── database.py               # Async engine & session factory
+│   ├── main.py                   # App factory + lifespan + CORS
+│   └── worker.py                 # Celery application instance
+├── frontend/                     # Browser-based Cashier Interface
+│   ├── index.html                # SPA shell (all pages + modals)
+│   ├── styles.css                # Dark-mode glassmorphism design system
+│   └── app.js                    # Client-side logic (~970 lines)
+├── tests/                        # Pytest async test suite
+│   ├── conftest.py               # Test fixtures & DB setup
+│   ├── test_auth.py              # Authentication tests
+│   ├── test_products.py          # Product CRUD tests
+│   ├── test_transactions.py      # Checkout & refund tests
+│   └── test_reports.py           # Reporting endpoint tests
+├── Dockerfile                    # Multi-stage production build
+├── docker-compose.yml            # Full stack (Web + DB + Redis + Worker)
+├── .github/workflows/ci-cd.yml   # GitHub Actions pipeline
+├── requirements.txt              # Python dependencies
+├── .env.example                  # Environment variable template
+├── .gitignore                    # Git exclusions
+└── run.py                        # Local development entry point
+```
 
 ---
 
-## 5. Follow the Data (Example: Checking Out)
+## 🚀 Quick Start
 
-To understand how it connects, imagine the cashier processes a checkout. Here is the exact path:
+### Prerequisites
+- Python 3.12+
+- Redis (for Celery — optional for basic usage)
 
-1.  **Frontend (app.js)**: Cashier clicks `+` next to an iPhone. The JS pushes the item to the `cart` array and updates the total calculation.
-2.  **Frontend (app.js)**: Cashier clicks `Checkout`. `processCheckout()` takes the cart array and `fetch()` POSTs it to `http://localhost:8080/api/v1/transactions/checkout`. 
-3.  **Backend (routes/transactions.py)**: Receives the route hit. First checks security: `get_current_user` intercepts the JWT token and verifies it. Then passes the cart to the service.
-4.  **Backend (services/transaction_service.py)**:
-    *   Finds the iPhone in the DB: Is `stock_quantity > 0`? Yes.
-    *   Deducts iPhone by `1` in memory.
-    *   Creates a `Transaction` row.
-    *   Creates a `TransactionItem` row.
-    *   Runs `db.commit()` to permanently save this to the hard drive.
-5.  **Backend (schemas/transaction.py)**: Structures the success data into a beautiful "Receipt" format and returns it as a JSON string to the frontend.
-6.  **Frontend (app.js)**: Receives the receipt JSON, wipes the local `cart`, calls `loadPosProducts()` to refresh the now-lower stock count from the server, and triggers `showReceipt()` to open the modal!
+### Local Development
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/YOUR_USERNAME/POSPython.git
+cd POSPython
+
+# 2. Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Configure environment
+cp .env.example .env
+# Edit .env with your values (works out of the box for local dev)
+
+# 5. Run the application
+python run.py
+```
+
+The app will be available at **http://localhost:8080**
+
+**Default credentials:** `admin` / `admin123`
+
+### With Docker
+
+```bash
+# Start the full stack
+docker compose up --build -d
+
+# View logs
+docker compose logs -f web
+
+# Stop everything
+docker compose down
+```
+
+---
+
+## 📖 API Documentation
+
+Once the server is running, interactive API docs are available at:
+
+| Documentation | URL |
+|---|---|
+| **Swagger UI** | http://localhost:8080/docs |
+| **ReDoc** | http://localhost:8080/redoc |
+
+### Key Endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `POST` | `/api/v1/auth/login` | Authenticate and get JWT tokens |
+| `POST` | `/api/v1/auth/register` | Register new user |
+| `GET` | `/api/v1/products/` | List products (paginated, filterable) |
+| `POST` | `/api/v1/products/` | Create product (Admin) |
+| `POST` | `/api/v1/transactions/checkout` | Process cart checkout |
+| `GET` | `/api/v1/transactions/{id}/invoice` | Download PDF invoice |
+| `POST` | `/api/v1/transactions/{id}/refund` | Refund transaction (Admin) |
+| `GET` | `/api/v1/reports/sales/summary` | Sales analytics (date range) |
+| `GET` | `/api/v1/reports/export/csv` | Export sales data as CSV |
+| `GET` | `/api/v1/reports/export/json` | Export sales data as JSON |
+| `POST` | `/api/v1/payments/create-checkout-session` | Create Stripe session |
+| `POST` | `/api/v1/payments/webhook` | Stripe webhook handler |
+
+---
+
+## 🧪 Testing
+
+```bash
+# Run the full test suite
+pytest tests/ -v
+
+# Run specific test modules
+pytest tests/test_auth.py -v
+pytest tests/test_transactions.py -v
+```
+
+---
+
+## 🐳 Deployment
+
+### Docker Compose (Production)
+
+```bash
+# Set production environment variables
+export SECRET_KEY=$(openssl rand -hex 32)
+export STRIPE_SECRET_KEY=sk_live_...
+
+# Deploy
+docker compose -f docker-compose.yml up -d
+```
+
+### AWS (EC2 + RDS + S3)
+
+1. **EC2**: Launch an instance with Docker installed
+2. **RDS**: Create a PostgreSQL instance, update `DATABASE_URL`
+3. **ElastiCache**: Redis instance for Celery broker
+4. **Configure**: Set environment variables in `.env` or EC2 user data
+5. **Deploy**: Push to `main` — GitHub Actions handles the rest
+
+### CI/CD Pipeline
+
+The `.github/workflows/ci-cd.yml` pipeline:
+
+1. ✅ **Lint** — flake8 syntax checks
+2. ✅ **Test** — pytest suite execution
+3. 🐳 **Build** — Docker image build & push to Docker Hub
+4. 🚀 **Deploy** — SSH into EC2 and pull latest containers
+
+**Required GitHub Secrets:**
+- `DOCKER_USERNAME` / `DOCKER_PASSWORD`
+- `EC2_HOST` / `EC2_USERNAME` / `EC2_SSH_KEY`
+
+---
+
+## 🛠 Tech Stack
+
+| Layer | Technology |
+|---|---|
+| **Backend** | Python 3.12, FastAPI, SQLAlchemy (async), Pydantic |
+| **Database** | SQLite (dev) / PostgreSQL (prod) |
+| **Auth** | JWT (python-jose), bcrypt |
+| **Payments** | Stripe Checkout + Webhooks |
+| **Task Queue** | Celery + Redis |
+| **PDF** | ReportLab |
+| **Frontend** | Vanilla JS SPA, CSS3 (glassmorphism, dark mode) |
+| **Containerization** | Docker, Docker Compose |
+| **CI/CD** | GitHub Actions |
+| **Cloud** | AWS (EC2, RDS, S3) |
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
