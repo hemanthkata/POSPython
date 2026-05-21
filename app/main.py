@@ -116,22 +116,24 @@ app.include_router(reports.router, prefix=API_PREFIX)
 app.include_router(payments.router, prefix=API_PREFIX)
 
 
-# ── Serve Frontend ────────────────────────────────────────────────────────────
-
-FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend"
-
-
-@app.get("/", tags=["System"])
-async def root():
-    """Serve the POS frontend."""
-    return FileResponse(FRONTEND_DIR / "index.html")
-
+FRONTEND_DIR = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 
 @app.get("/health", tags=["System"])
 async def health_check():
     """System health check endpoint."""
     return {"status": "healthy"}
 
-
-# Mount static files AFTER routes so /docs, /api, /health take priority
-app.mount("/", StaticFiles(directory=FRONTEND_DIR), name="frontend")
+@app.get("/{full_path:path}", include_in_schema=False)
+async def serve_spa(full_path: str):
+    """Serve the React SPA and static assets."""
+    # Do not intercept API or docs routes
+    if full_path.startswith("api/") or full_path.startswith("docs") or full_path.startswith("openapi.json"):
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Not Found")
+        
+    file_path = FRONTEND_DIR / full_path
+    if file_path.exists() and file_path.is_file():
+        return FileResponse(file_path)
+        
+    # SPA routing fallback
+    return FileResponse(FRONTEND_DIR / "index.html")

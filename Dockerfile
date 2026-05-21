@@ -3,7 +3,15 @@
 # Serves both the FastAPI backend and static frontend via a single container
 # ══════════════════════════════════════════════════════════════════════════════
 
-# ── Stage 1: Python dependencies ──────────────────────────────────────────────
+# ── Stage 1: Frontend (React/Vite) ────────────────────────────────────────────
+FROM node:20-alpine AS frontend-builder
+WORKDIR /app/frontend
+COPY frontend/package*.json ./
+RUN npm ci
+COPY frontend/ ./
+RUN npm run build
+
+# ── Stage 2: Python dependencies ──────────────────────────────────────────────
 FROM python:3.12-slim AS builder
 
 WORKDIR /build
@@ -33,7 +41,7 @@ COPY --from=builder /install /usr/local
 
 # Copy application source
 COPY app/ ./app/
-COPY frontend/ ./frontend/
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 COPY run.py .
 COPY requirements.txt .
 
