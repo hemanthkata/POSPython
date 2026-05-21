@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
     # Database
-    DATABASE_URL: str = "sqlite+aiosqlite:///./pos_database.db"
+    DATABASE_URL = "sqlite+aiosqlite:////tmp/fastpos.db"
 
     # JWT
     SECRET_KEY: str = "a7f3b9c2e1d4f8a6b5c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2"

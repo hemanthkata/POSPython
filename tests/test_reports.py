@@ -62,7 +62,6 @@ async def seed_sales_data(client: AsyncClient, admin_token: str, cashier_token: 
     return pid1, pid2
 
 
-@pytest.mark.asyncio
 class TestReports:
     """Test suite for the /api/v1/reports endpoints."""
 

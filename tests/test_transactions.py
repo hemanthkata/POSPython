@@ -23,7 +23,6 @@ async def create_test_product(client: AsyncClient, admin_token: str, sku_suffix:
     return response.json()["id"]
 
 
-@pytest.mark.asyncio
 class TestTransactions:
     """Test suite for the /api/v1/transactions endpoints."""
 

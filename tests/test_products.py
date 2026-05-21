@@ -18,7 +18,6 @@ SAMPLE_PRODUCT = {
 }
 
 
-@pytest.mark.asyncio
 class TestProducts:
     """Test suite for the /api/v1/products endpoints."""
 

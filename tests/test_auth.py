@@ -6,7 +6,6 @@ from httpx import AsyncClient
 from tests.conftest import auth_header
 
 
-@pytest.mark.asyncio
 class TestAuthentication:
     """Test suite for the /api/v1/auth endpoints."""
 
