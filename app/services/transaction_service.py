@@ -42,7 +42,9 @@ async def process_checkout(
 
     for cart_item in cart.items:
         result = await db.execute(
-            select(Product).where(Product.id == cart_item.product_id)
+            select(Product)
+            .where(Product.id == cart_item.product_id)
+            .with_for_update()
         )
         product = result.scalar_one_or_none()
 
@@ -185,7 +187,9 @@ async def refund_transaction(db: AsyncSession, transaction_id: str) -> Transacti
     # Restore stock for each item
     for item in transaction.items:
         result = await db.execute(
-            select(Product).where(Product.id == item.product_id)
+            select(Product)
+            .where(Product.id == item.product_id)
+            .with_for_update()
         )
         product = result.scalar_one_or_none()
         if product:

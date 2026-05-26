@@ -38,16 +38,12 @@ async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
 
 # Override the dependency
 app.dependency_overrides[get_db] = override_get_db
-
-
-# ── Fixtures ──────────────────────────────────────────────────────────────────
-
-@pytest.fixture(scope="session")
-def event_loop():
-    """Create an event loop for the test session."""
-    loop = asyncio.new_event_loop()
-    yield loop
-    loop.close()
+# Configure Celery in eager mode (run synchronously without Redis broker)
+from app.worker import celery_app
+celery_app.conf.update(
+    task_always_eager=True,
+    task_eager_propagates=True,
+)
 
 
 @pytest_asyncio.fixture(autouse=True)
