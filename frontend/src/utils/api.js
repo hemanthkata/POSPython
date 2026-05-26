@@ -1,4 +1,6 @@
-export const API_BASE = 'http://localhost:8080/api/v1';
+export const API_BASE = window.location.port === '5173'
+    ? 'http://localhost:8080/api/v1'
+    : `${window.location.origin}/api/v1`;
 
 export async function tryRefreshToken() {
     const refreshToken = localStorage.getItem('fastpos_refresh');
